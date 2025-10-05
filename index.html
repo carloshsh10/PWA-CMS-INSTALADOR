@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uzze Mídia - CMS Instalador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+        .tab-active { border-bottom-color: #ADFF2F; color: #ADFF2F; }
+        .tab-inactive { border-bottom-color: transparent; }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.75);
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold">
+                <span style="font-family: 'Aerospace', sans-serif; color: #ADFF2F;">Uzze</span><span style="font-family: 'Aerospace', sans-serif;">TV</span>
+            </h1>
+            <p class="text-xl tracking-widest" style="font-family: 'Montserrat', sans-serif;">MÍDIA</p>
+            <p class="text-lg text-gray-400 mt-4">CMS Instalador</p>
+        </div>
+        <button id="login-button" class="bg-[#ADFF2F] text-gray-900 font-bold py-3 px-6 rounded-lg flex items-center space-x-2 hover:bg-lime-400 transition">
+            <i class="fab fa-google"></i>
+            <span>Entrar com Google</span>
+        </button>
+        <p id="auth-error" class="text-red-500 mt-4 hidden"></p>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL DO APP (ESCONDIDO ATÉ O LOGIN) -->
+    <div id="app-content" class="hidden">
+        <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
+            <h1 class="text-xl font-bold text-[#ADFF2F]">UZZE MÍDIA</h1>
+            <div class="flex items-center space-x-3">
+                <span id="user-name" class="text-sm"></span>
+                <button id="logout-button" class="text-gray-400 hover:text-white"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </header>
+
+        <main class="p-4">
+            <!-- ABAS DE NAVEGAÇÃO -->
+            <div class="flex border-b border-gray-700 mb-4">
+                <button data-tab="monitoramento" class="tab-button tab-active text-sm md:text-base py-2 px-4 font-semibold">MONITORAMENTO</button>
+                <button data-tab="ativacao" class="tab-button tab-inactive text-sm md:text-base py-2 px-4 font-semibold">ATIVAÇÃO</button>
+                <button data-tab="hospedagem" class="tab-button tab-inactive text-sm md:text-base py-2 px-4 font-semibold">HOSPEDAGEM</button>
+            </div>
+
+            <!-- CONTEÚDO DAS ABAS -->
+            <div id="tab-content">
+                <!-- ABA DE MONITORAMENTO -->
+                <div id="monitoramento-content" class="space-y-4">
+                    <!-- Cards dos dispositivos serão inseridos aqui pelo JS -->
+                </div>
+
+                <!-- ABA DE ATIVAÇÃO -->
+                <div id="ativacao-content" class="hidden text-center">
+                    <p class="mb-4">Leia o QR Code do APP Cliente para ativar uma nova licença.</p>
+                    <button id="scan-qr-button" class="bg-[#ADFF2F] text-gray-900 font-bold py-3 px-8 rounded-lg">
+                        <i class="fas fa-qrcode mr-2"></i>Escanear QR Code
+                    </button>
+                    <div class="mt-8">
+                        <h2 class="text-lg font-semibold">Licenças Disponíveis</h2>
+                        <p id="licencas-disponiveis" class="text-2xl font-bold text-[#ADFF2F]">0</p>
+                    </div>
+                </div>
+
+                <!-- ABA DE HOSPEDAGEM -->
+                <div id="hospedagem-content" class="hidden">
+                    <p class="text-gray-400 text-center">A funcionalidade de hospedagem e gerenciamento de artes do Google Drive será implementada em uma próxima fase.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DE ATIVAÇÃO -->
+    <div id="activation-modal" class="modal-backdrop fixed inset-0 flex items-center justify-center p-4 hidden">
+         <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-center mb-4 text-[#ADFF2F]">Ativar Dispositivo</h2>
+                <form id="activation-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">UID do Dispositivo</label>
+                        <input type="text" id="uid-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">N/S do Dispositivo</label>
+                        <input type="text" id="ns-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Licença a ser usada</label>
+                        <input type="text" id="licenca-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" readonly>
+                    </div>
+                    <div>
+                        <label for="cliente-input" class="block text-sm font-medium text-gray-400">Nome do Cliente</label>
+                        <input type="text" id="cliente-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" required>
+                    </div>
+                    <div>
+                        <label for="telefone-input" class="block text-sm font-medium text-gray-400">Telefone</label>
+                        <input type="tel" id="telefone-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" required>
+                    </div>
+                    <div>
+                        <label for="dispositivo-input" class="block text-sm font-medium text-gray-400">Nome do Dispositivo (Apelido)</label>
+                        <input type="text" id="dispositivo-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" placeholder="Ex: Lanchonete, Padaria..." required>
+                    </div>
+                     <div>
+                        <label for="validade-input" class="block text-sm font-medium text-gray-400">Validade (em meses)</label>
+                        <select id="validade-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1">
+                            <option value="1">1 Mês</option>
+                            <option value="3">3 Meses</option>
+                            <option value="6">6 Meses</option>
+                            <option value="12" selected>12 Meses</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="drive-link-input" class="block text-sm font-medium text-gray-400">Link da Pasta do Google Drive</label>
+                        <input type="url" id="drive-link-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" placeholder="https://drive.google.com/drive/folders/...">
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-700 px-6 py-3 flex justify-end space-x-3 rounded-b-lg">
+                <button id="cancel-activation-button" class="bg-gray-600 hover:bg-gray-500 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="save-activation-button" type="submit" form="activation-form" class="bg-[#ADFF2F] hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-lg">Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script para leitor de QR Code -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <!-- Scripts Firebase (SDK) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Configuração do Firebase (integrada para evitar erros de importação local)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB_2iw6P97toez8A65xfB2-GB6lBKckffI",
+            authDomain: "uzzemidiatv.firebaseapp.com",
+            projectId: "uzzemidiatv",
+            storageBucket: "uzzemidiatv.appspot.com",
+            messagingSenderId: "717413301017",
+            appId: "1:717413301017:web:6da6a0223db091c4a0e388",
+            measurementId: "G-FHBBP0772N"
+        };
+
+        // Inicialização do Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        // Elementos da UI
+        const loginScreen = document.getElementById('login-screen');
+        const appContent = document.getElementById('app-content');
+        const loginButton = document.getElementById('login-button');
+        const logoutButton = document.getElementById('logout-button');
+        const userNameEl = document.getElementById('user-name');
+        const authErrorEl = document.getElementById('auth-error');
+        const monitoramentoContent = document.getElementById('monitoramento-content');
+        
+        // Estado da aplicação
+        let currentUser = null;
+        let unsubscribeDevices = null;
+
+        // Lógica de Autenticação
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // TODO: Adicionar verificação se o email do usuário é autorizado pelo PWA Master
+                currentUser = user;
+                loginScreen.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                userNameEl.textContent = user.displayName || user.email;
+                
+                // Inicia o monitoramento dos dispositivos após o login
+                listenToDevices();
+
+            } else {
+                currentUser = null;
+                loginScreen.classList.remove('hidden');
+                appContent.classList.add('hidden');
+                if(unsubscribeDevices) unsubscribeDevices(); // Para de ouvir quando deslogado
+            }
+        });
+
+        loginButton.addEventListener('click', () => {
+            signInWithPopup(auth, provider)
+                .catch(error => {
+                    console.error("Erro no Login:", error);
+                    authErrorEl.textContent = "Falha no login. Tente novamente.";
+                    authErrorEl.classList.remove('hidden');
+                });
+        });
+
+        logoutButton.addEventListener('click', () => {
+            signOut(auth);
+        });
+        
+        // Lógica de Navegação por Abas
+        const tabs = document.querySelectorAll('.tab-button');
+        const tabContents = {
+            monitoramento: document.getElementById('monitoramento-content'),
+            ativacao: document.getElementById('ativacao-content'),
+            hospedagem: document.getElementById('hospedagem-content'),
+        };
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.replace('tab-active', 'tab-inactive'));
+                tab.classList.replace('tab-inactive', 'tab-active');
+
+                Object.values(tabContents).forEach(content => content.classList.add('hidden'));
+                tabContents[tab.dataset.tab].classList.remove('hidden');
+            });
+        });
+        
+        // Lógica de Monitoramento (Leitura do Firestore)
+        function listenToDevices() {
+            if (!currentUser) return;
+            const devicesRef = collection(db, 'installers', currentUser.uid, 'devices');
+
+            unsubscribeDevices = onSnapshot(devicesRef, (snapshot) => {
+                monitoramentoContent.innerHTML = ''; // Limpa a lista antes de renderizar
+                if(snapshot.empty) {
+                    monitoramentoContent.innerHTML = '<p class="text-center text-gray-500">Nenhum dispositivo ativado.</p>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const device = doc.data();
+                    const deviceCard = createDeviceCard(doc.id, device);
+                    monitoramentoContent.appendChild(deviceCard);
+                });
+            });
+        }
+
+        function createDeviceCard(id, device) {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-800 p-4 rounded-lg shadow-md';
+
+            const validadeDate = new Date(device.validade.seconds * 1000);
+            const statusClass = device.status === 'ativo' ? 'text-green-400' : 'text-yellow-400';
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-bold text-lg">${device.nomeDispositivo} <span class="text-sm font-normal text-gray-400">(${device.nomeCliente})</span></h3>
+                        <p class="text-sm text-gray-500">${device.telefone}</p>
+                    </div>
+                    <span class="text-sm font-semibold ${statusClass}">${device.status.toUpperCase()}</span>
+                </div>
+                <div class="text-xs text-gray-400 mt-3 space-y-1">
+                    <p><strong>Licença:</strong> ${device.licenca}</p>
+                    <p><strong>Validade:</strong> ${validadeDate.toLocaleDateString('pt-BR')}</p>
+                    <p><strong>Link Drive:</strong> <a href="${device.linkDrive}" target="_blank" class="text-blue-400 hover:underline">Abrir</a></p>
+                    <p class="font-mono text-gray-500">UID: ${device.uid}</p>
+                </div>
+                <div class="mt-3 flex justify-end space-x-2">
+                     <button data-id="${id}" class="block-button text-xs bg-yellow-600 hover:bg-yellow-500 px-3 py-1 rounded">Bloquear</button>
+                     <button data-id="${id}" class="delete-button text-xs bg-red-600 hover:bg-red-500 px-3 py-1 rounded">Excluir</button>
+                </div>
+            `;
+            
+            card.querySelector('.delete-button').addEventListener('click', async () => {
+                const confirmDelete = confirm(`Tem certeza que deseja excluir o dispositivo ${device.nomeDispositivo}? A licença retornará a estar disponível.`);
+                if(confirmDelete){
+                    await deleteDoc(doc(db, 'installers', currentUser.uid, 'devices', id));
+                    // TODO: Incrementar a contagem de licenças disponíveis
+                }
+            });
+
+            return card;
+        }
+
+        // Lógica de Ativação (Modal e Scanner)
+        const scanButton = document.getElementById('scan-qr-button');
+        const activationModal = document.getElementById('activation-modal');
+        const cancelActivationButton = document.getElementById('cancel-activation-button');
+        const saveActivationButton = document.getElementById('save-activation-button');
+        const activationForm = document.getElementById('activation-form');
+        let html5QrCode;
+
+        scanButton.addEventListener('click', () => {
+            const qrScannerContainer = document.createElement('div');
+            qrScannerContainer.id = 'qr-reader';
+            qrScannerContainer.style.width = '100%';
+            document.body.appendChild(qrScannerContainer);
+            
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                console.log(`Scan result: ${decodedText}`, decodedResult);
+                html5QrCode.stop().then(() => {
+                    qrScannerContainer.remove();
+                    processQrCode(decodedText);
+                }).catch(err => console.error("Failed to stop scanner", err));
+            };
+
+            const config = { fps: 10, qrbox: 250 };
+            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback);
+        });
+        
+        function processQrCode(data) {
+            try {
+                const uidMatch = data.match(/uid:([^,]+)/);
+                const nsMatch = data.match(/ns:([^,]+)/);
+                
+                if(!uidMatch || !nsMatch){
+                    alert("QR Code inválido. Formato esperado: 'uid:XXXX,ns:YYYY'");
+                    return;
+                }
+                
+                document.getElementById('uid-input').value = uidMatch[1];
+                document.getElementById('ns-input').value = nsMatch[1];
+                // TODO: Pegar uma licença real da lista de disponíveis
+                document.getElementById('licenca-input').value = `LICENCA-${new Date().getTime()}`;
+                
+                activationModal.classList.remove('hidden');
+
+            } catch(e) {
+                alert('Erro ao processar QR Code.');
+                console.error(e);
+            }
+        }
+        
+        cancelActivationButton.addEventListener('click', () => {
+             activationModal.classList.add('hidden');
+             activationForm.reset();
+        });
+
+        activationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const validadeMeses = parseInt(document.getElementById('validade-input').value);
+            const dataValidade = new Date();
+            dataValidade.setMonth(dataValidade.getMonth() + validadeMeses);
+
+            const newDevice = {
+                uid: document.getElementById('uid-input').value,
+                ns: document.getElementById('ns-input').value,
+                licenca: document.getElementById('licenca-input').value,
+                nomeCliente: document.getElementById('cliente-input').value,
+                telefone: document.getElementById('telefone-input').value,
+                nomeDispositivo: document.getElementById('dispositivo-input').value,
+                linkDrive: document.getElementById('drive-link-input').value,
+                validade: dataValidade,
+                status: 'ativo', // 'ativo', 'inadimplente', 'bloqueado'
+                ultimoSincronismo: new Date(),
+            };
+            
+            try {
+                const devicesRef = collection(db, 'installers', currentUser.uid, 'devices');
+                await addDoc(devicesRef, newDevice);
+                // TODO: Decrementar a contagem de licenças disponíveis
+                alert('Dispositivo ativado com sucesso!');
+                cancelActivationButton.click(); // Fecha e reseta o modal
+            } catch (error) {
+                console.error("Erro ao salvar dispositivo:", error);
+                alert('Falha ao salvar. Tente novamente.');
+            }
+        });
+
+    </script>
+</body>
+</html>
+
