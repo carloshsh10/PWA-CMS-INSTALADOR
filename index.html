@@ -3,371 +3,694 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uzze Mídia - CMS Instalador</title>
+    <title>PWA CMS INSTALADOR - UZZE Mídia TV</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Montserrat', sans-serif; }
-        .tab-active { border-bottom-color: #ADFF2F; color: #ADFF2F; }
-        .tab-inactive { border-bottom-color: transparent; }
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.75);
-            transition: opacity 0.3s ease-in-out;
-        }
+        .tab-button.active { border-color: #84cc16; color: #84cc16; background-color: #ecfccb; }
+        #qr-reader { border: 2px solid #84cc16; border-radius: 8px; }
+        .drive-item:hover { background-color: #374151; }
     </style>
 </head>
 <body class="bg-gray-900 text-white">
 
-    <!-- TELA DE LOGIN -->
-    <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="text-center mb-8">
-            <h1 class="text-5xl font-bold">
-                <span style="font-family: 'Aerospace', sans-serif; color: #ADFF2F;">Uzze</span><span style="font-family: 'Aerospace', sans-serif;">TV</span>
-            </h1>
-            <p class="text-xl tracking-widest" style="font-family: 'Montserrat', sans-serif;">MÍDIA</p>
-            <p class="text-lg text-gray-400 mt-4">CMS Instalador</p>
+    <!-- Tela de Autenticação -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm text-center">
+            <h1 class="text-3xl font-bold mb-2"><span style="color: #84cc16;">UZZE</span><span>MÍDIA TV</span></h1>
+            <h2 class="text-xl font-semibold text-gray-300 mb-6">CMS INSTALADOR</h2>
+            <p id="auth-message" class="text-yellow-400 mb-4"></p>
+            <button id="login-button" class="w-full bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold py-2 px-4 rounded-lg transition duration-300">Entrar com Google</button>
         </div>
-        <button id="login-button" class="bg-[#ADFF2F] text-gray-900 font-bold py-3 px-6 rounded-lg flex items-center space-x-2 hover:bg-lime-400 transition">
-            <i class="fab fa-google"></i>
-            <span>Entrar com Google</span>
-        </button>
-        <p id="auth-error" class="text-red-500 mt-4 hidden"></p>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL DO APP (ESCONDIDO ATÉ O LOGIN) -->
-    <div id="app-content" class="hidden">
-        <header class="bg-gray-800 p-4 flex justify-between items-center shadow-lg">
-            <h1 class="text-xl font-bold text-[#ADFF2F]">UZZE MÍDIA</h1>
-            <div class="flex items-center space-x-3">
-                <span id="user-name" class="text-sm"></span>
-                <button id="logout-button" class="text-gray-400 hover:text-white"><i class="fas fa-sign-out-alt"></i></button>
+    <!-- Aplicação Principal -->
+    <div id="main-app" class="hidden">
+        <header class="bg-gray-800 p-4 shadow-md flex justify-between items-center">
+            <h1 class="text-2xl font-bold"><span style="color: #84cc16;">UZZE</span><span class="text-white"> MÍDIA - INSTALADOR</span></h1>
+            <div>
+                <span id="user-info" class="text-sm text-gray-300 mr-4"></span>
+                <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">Sair</button>
             </div>
         </header>
 
-        <main class="p-4">
-            <!-- ABAS DE NAVEGAÇÃO -->
-            <div class="flex border-b border-gray-700 mb-4">
-                <button data-tab="monitoramento" class="tab-button tab-active text-sm md:text-base py-2 px-4 font-semibold">MONITORAMENTO</button>
-                <button data-tab="ativacao" class="tab-button tab-inactive text-sm md:text-base py-2 px-4 font-semibold">ATIVAÇÃO</button>
-                <button data-tab="hospedagem" class="tab-button tab-inactive text-sm md:text-base py-2 px-4 font-semibold">HOSPEDAGEM</button>
+        <main class="p-4 md:p-8">
+            <div class="mb-6 border-b border-gray-700">
+                <nav class="flex flex-wrap space-x-2 sm:space-x-4 text-sm sm:text-base" aria-label="Tabs">
+                    <button class="tab-button active" data-tab="tab-monitoring">Monitoramento</button>
+                    <button class="tab-button" data-tab="tab-activation">Ativação de App</button>
+                    <button class="tab-button" data-tab="tab-drive">Hospedagem de Artes</button>
+                    <button class="tab-button" data-tab="tab-maintenance">Manutenção</button>
+                    <button class="tab-button" data-tab="tab-advisory">Aviso Inadimplência</button>
+                </nav>
             </div>
 
-            <!-- CONTEÚDO DAS ABAS -->
-            <div id="tab-content">
-                <!-- ABA DE MONITORAMENTO -->
-                <div id="monitoramento-content" class="space-y-4">
-                    <!-- Cards dos dispositivos serão inseridos aqui pelo JS -->
-                </div>
+            <!-- Conteúdo das Abas -->
+            <div id="tab-monitoring" class="tab-content"></div>
+            <div id="tab-activation" class="tab-content hidden"></div>
+            <div id="tab-drive" class="tab-content hidden"></div>
+            <div id="tab-maintenance" class="tab-content hidden"></div>
+            <div id="tab-advisory" class="tab-content hidden"></div>
 
-                <!-- ABA DE ATIVAÇÃO -->
-                <div id="ativacao-content" class="hidden text-center">
-                    <p class="mb-4">Leia o QR Code do APP Cliente para ativar uma nova licença.</p>
-                    <button id="scan-qr-button" class="bg-[#ADFF2F] text-gray-900 font-bold py-3 px-8 rounded-lg">
-                        <i class="fas fa-qrcode mr-2"></i>Escanear QR Code
-                    </button>
-                    <div class="mt-8">
-                        <h2 class="text-lg font-semibold">Licenças Disponíveis</h2>
-                        <p id="licencas-disponiveis" class="text-2xl font-bold text-[#ADFF2F]">0</p>
-                    </div>
-                </div>
-
-                <!-- ABA DE HOSPEDAGEM -->
-                <div id="hospedagem-content" class="hidden">
-                    <p class="text-gray-400 text-center">A funcionalidade de hospedagem e gerenciamento de artes do Google Drive será implementada em uma próxima fase.</p>
-                </div>
-            </div>
         </main>
     </div>
 
-    <!-- MODAL DE ATIVAÇÃO -->
-    <div id="activation-modal" class="modal-backdrop fixed inset-0 flex items-center justify-center p-4 hidden">
-         <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-center mb-4 text-[#ADFF2F]">Ativar Dispositivo</h2>
-                <form id="activation-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400">UID do Dispositivo</label>
-                        <input type="text" id="uid-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" readonly>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400">N/S do Dispositivo</label>
-                        <input type="text" id="ns-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" readonly>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400">Licença a ser usada</label>
-                        <input type="text" id="licenca-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" readonly>
-                    </div>
-                    <div>
-                        <label for="cliente-input" class="block text-sm font-medium text-gray-400">Nome do Cliente</label>
-                        <input type="text" id="cliente-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" required>
-                    </div>
-                    <div>
-                        <label for="telefone-input" class="block text-sm font-medium text-gray-400">Telefone</label>
-                        <input type="tel" id="telefone-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" required>
-                    </div>
-                    <div>
-                        <label for="dispositivo-input" class="block text-sm font-medium text-gray-400">Nome do Dispositivo (Apelido)</label>
-                        <input type="text" id="dispositivo-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" placeholder="Ex: Lanchonete, Padaria..." required>
-                    </div>
-                     <div>
-                        <label for="validade-input" class="block text-sm font-medium text-gray-400">Validade (em meses)</label>
-                        <select id="validade-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1">
-                            <option value="1">1 Mês</option>
-                            <option value="3">3 Meses</option>
-                            <option value="6">6 Meses</option>
-                            <option value="12" selected>12 Meses</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="drive-link-input" class="block text-sm font-medium text-gray-400">Link da Pasta do Google Drive</label>
-                        <input type="url" id="drive-link-input" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-1" placeholder="https://drive.google.com/drive/folders/...">
-                    </div>
-                </form>
-            </div>
-            <div class="bg-gray-700 px-6 py-3 flex justify-end space-x-3 rounded-b-lg">
-                <button id="cancel-activation-button" class="bg-gray-600 hover:bg-gray-500 font-bold py-2 px-4 rounded-lg">Cancelar</button>
-                <button id="save-activation-button" type="submit" form="activation-form" class="bg-[#ADFF2F] hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-lg">Salvar</button>
-            </div>
+    <!-- Modal de Ativação -->
+    <div id="activation-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg max-h-full overflow-y-auto">
+            <h3 class="text-2xl font-bold mb-4 text-lime-400">Ativar Novo Dispositivo</h3>
+            <form id="activation-form" class="space-y-3">
+                <input type="text" id="device-uid" class="w-full p-2 bg-gray-700 rounded border-gray-600" readonly>
+                <input type="text" id="device-ns" class="w-full p-2 bg-gray-700 rounded border-gray-600" readonly>
+                <input type="text" id="client-name" placeholder="Nome do Cliente" class="w-full p-2 bg-gray-700 rounded border-gray-600" required>
+                <input type="tel" id="client-phone" placeholder="Telefone do Cliente" class="w-full p-2 bg-gray-700 rounded border-gray-600" required>
+                <input type="text" id="device-name" placeholder="Nome do Dispositivo (Ex: TV da Loja)" class="w-full p-2 bg-gray-700 rounded border-gray-600" required>
+                <select id="license-select" class="w-full p-2 bg-gray-700 rounded border-gray-600" required></select>
+                <select id="validity-select" class="w-full p-2 bg-gray-700 rounded border-gray-600" required>
+                    <option value="">Selecione a Validade</option>
+                    <script>for(let i=1; i<=12; i++) document.write(`<option value="${i}">${i} Mês${i>1?'es':''}</option>`);</script>
+                </select>
+                <input type="url" id="drive-link" placeholder="Link da Pasta Google Drive (Opcional)" class="w-full p-2 bg-gray-700 rounded border-gray-600">
+                <div class="flex space-x-4 mt-4">
+                    <button type="submit" class="w-full bg-lime-500 text-gray-900 font-bold py-2 rounded">Salvar e Ativar</button>
+                    <button type="button" id="cancel-activation" class="w-full bg-gray-600 text-white font-bold py-2 rounded">Cancelar</button>
+                </div>
+            </form>
         </div>
     </div>
     
-    <!-- Script para leitor de QR Code -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    
-    <!-- Scripts Firebase (SDK) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    <!-- Modal genérico para notificações -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <h3 id="notification-title" class="text-xl font-bold mb-4">Aviso</h3>
+            <p id="notification-message"></p>
+            <button id="notification-close" class="mt-6 w-full bg-lime-500 text-gray-900 font-bold py-2 px-4 rounded-lg">Fechar</button>
+        </div>
+    </div>
 
-        // Configuração do Firebase (integrada para evitar erros de importação local)
+
+    <script type="module">
+        // --- SDKs E CONFIGURAÇÕES ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, setDoc, query, where, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyB_2iw6P97toez8A65xfB2-GB6lBKckffI",
             authDomain: "uzzemidiatv.firebaseapp.com",
             projectId: "uzzemidiatv",
-            storageBucket: "uzzemidiatv.appspot.com",
+            storageBucket: "uzzemidiatv.firebasestorage.app",
             messagingSenderId: "717413301017",
             appId: "1:717413301017:web:6da6a0223db091c4a0e388",
-            measurementId: "G-FHBBP0772N"
         };
+        
+        // Google Drive API Config
+        const GOOGLE_API_KEY = "AIzaSyDW7GyR3PZBnIPQQmIWZE0rHKfMT4XUNTM";
+        const GOOGLE_CLIENT_ID = "339438040741-ksdo2bfk3r6jvm69g06p87v9krh562q6.apps.googleusercontent.com";
+        const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive';
+        let tokenClient;
 
-        // Inicialização do Firebase
+
+        // --- INICIALIZAÇÃO ---
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
+        let currentInstaller = null;
+        let devicesUnsubscribe = null;
 
-        // Elementos da UI
-        const loginScreen = document.getElementById('login-screen');
-        const appContent = document.getElementById('app-content');
+        // --- ELEMENTOS DA UI ---
+        const authScreen = document.getElementById('auth-screen');
+        const mainApp = document.getElementById('main-app');
         const loginButton = document.getElementById('login-button');
         const logoutButton = document.getElementById('logout-button');
-        const userNameEl = document.getElementById('user-name');
-        const authErrorEl = document.getElementById('auth-error');
-        const monitoramentoContent = document.getElementById('monitoramento-content');
-        
-        // Estado da aplicação
-        let currentUser = null;
-        let unsubscribeDevices = null;
-
-        // Lógica de Autenticação
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // TODO: Adicionar verificação se o email do usuário é autorizado pelo PWA Master
-                currentUser = user;
-                loginScreen.classList.add('hidden');
-                appContent.classList.remove('hidden');
-                userNameEl.textContent = user.displayName || user.email;
-                
-                // Inicia o monitoramento dos dispositivos após o login
-                listenToDevices();
-
-            } else {
-                currentUser = null;
-                loginScreen.classList.remove('hidden');
-                appContent.classList.add('hidden');
-                if(unsubscribeDevices) unsubscribeDevices(); // Para de ouvir quando deslogado
-            }
-        });
-
-        loginButton.addEventListener('click', () => {
-            signInWithPopup(auth, provider)
-                .catch(error => {
-                    console.error("Erro no Login:", error);
-                    authErrorEl.textContent = "Falha no login. Tente novamente.";
-                    authErrorEl.classList.remove('hidden');
-                });
-        });
-
-        logoutButton.addEventListener('click', () => {
-            signOut(auth);
-        });
-        
-        // Lógica de Navegação por Abas
+        const userInfoEl = document.getElementById('user-info');
+        const authMessage = document.getElementById('auth-message');
         const tabs = document.querySelectorAll('.tab-button');
         const tabContents = {
-            monitoramento: document.getElementById('monitoramento-content'),
-            ativacao: document.getElementById('ativacao-content'),
-            hospedagem: document.getElementById('hospedagem-content'),
+            monitoring: document.getElementById('tab-monitoring'),
+            activation: document.getElementById('tab-activation'),
+            drive: document.getElementById('tab-drive'),
+            maintenance: document.getElementById('tab-maintenance'),
+            advisory: document.getElementById('tab-advisory'),
         };
+        const activationModal = document.getElementById('activation-modal');
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.replace('tab-active', 'tab-inactive'));
-                tab.classList.replace('tab-inactive', 'tab-active');
 
+        // --- AUTENTICAÇÃO E CONTROLE DE ACESSO ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const installerRef = doc(db, 'installers', user.email.toLowerCase());
+                const installerSnap = await getDoc(installerRef);
+                if (installerSnap.exists()) {
+                    currentInstaller = { id: installerSnap.id, ...installerSnap.data() };
+                    authScreen.classList.add('hidden');
+                    mainApp.classList.remove('hidden');
+                    userInfoEl.textContent = currentInstaller.name;
+                    initializeTabs();
+                    initializeGapiClient();
+                } else {
+                    authMessage.textContent = 'Acesso negado. Sua conta não está registrada.';
+                    signOut(auth);
+                }
+            } else {
+                currentInstaller = null;
+                authScreen.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+                if(devicesUnsubscribe) devicesUnsubscribe();
+            }
+        });
+
+        loginButton.addEventListener('click', () => signInWithPopup(auth, provider).catch(err => showNotification("Erro de Login", err.message)));
+        logoutButton.addEventListener('click', () => signOut(auth));
+
+
+        // --- NAVEGAÇÃO POR ABAS ---
+        tabs.forEach(button => {
+            button.addEventListener('click', () => {
+                tabs.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
                 Object.values(tabContents).forEach(content => content.classList.add('hidden'));
-                tabContents[tab.dataset.tab].classList.remove('hidden');
+                tabContents[button.dataset.tab.split('-')[1]].classList.remove('hidden');
             });
         });
-        
-        // Lógica de Monitoramento (Leitura do Firestore)
-        function listenToDevices() {
-            if (!currentUser) return;
-            const devicesRef = collection(db, 'installers', currentUser.uid, 'devices');
 
-            unsubscribeDevices = onSnapshot(devicesRef, (snapshot) => {
-                monitoramentoContent.innerHTML = ''; // Limpa a lista antes de renderizar
-                if(snapshot.empty) {
-                    monitoramentoContent.innerHTML = '<p class="text-center text-gray-500">Nenhum dispositivo ativado.</p>';
-                    return;
+        function initializeTabs() {
+            renderMonitoringTab();
+            renderActivationTab();
+            renderDriveTab();
+            renderMaintenanceTab();
+            renderAdvisoryTab();
+            listenToDevices();
+        }
+
+        // --- ABA DE MONITORAMENTO ---
+        function listenToDevices() {
+             if (devicesUnsubscribe) devicesUnsubscribe(); // Cancela listener anterior
+             const q = query(collection(db, "devices"), where("installerId", "==", currentInstaller.id));
+             devicesUnsubscribe = onSnapshot(q, (snapshot) => {
+                const devices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (document.querySelector('.tab-button[data-tab="tab-monitoring"]').classList.contains('active')) {
+                     renderMonitoringTab(devices);
                 }
-                snapshot.forEach(doc => {
-                    const device = doc.data();
-                    const deviceCard = createDeviceCard(doc.id, device);
-                    monitoramentoContent.appendChild(deviceCard);
+                if (document.querySelector('.tab-button[data-tab="tab-maintenance"]').classList.contains('active')) {
+                     renderMaintenanceTab(devices);
+                }
+                if (document.querySelector('.tab-button[data-tab="tab-advisory"]').classList.contains('active')) {
+                     renderAdvisoryTab(devices);
+                }
+             });
+        }
+        
+        function renderMonitoringTab(devices = []) {
+            const getStatusBadge = (status) => {
+                const colors = {
+                    active: 'bg-green-500',
+                    no_playlist: 'bg-yellow-500',
+                    connection_lost: 'bg-red-500',
+                    blocked: 'bg-gray-600'
+                };
+                const text = {
+                    active: 'Funcionando',
+                    no_playlist: 'Sem Playlist',
+                    connection_lost: 'Desconectado',
+                    blocked: 'Bloqueado'
+                }
+                return `<span class="px-2 py-1 text-xs font-semibold rounded-full text-white ${colors[status] || 'bg-gray-500'}">${text[status] || status}</span>`;
+            };
+
+            let content = `<h2 class="text-2xl font-bold mb-4 text-lime-400">Dispositivos Ativos</h2>`;
+            if (devices.length === 0) {
+                content += `<p>Nenhum dispositivo ativado. Vá para a aba "Ativação de App".</p>`;
+            } else {
+                content += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+                devices.forEach(d => {
+                    content += `
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-lg space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-xl font-bold">${d.deviceName}</h3>
+                                    <p class="text-sm text-gray-400">${d.clientName} - ${d.clientPhone}</p>
+                                </div>
+                                ${getStatusBadge(d.status)}
+                            </div>
+                            <p class="text-xs">UID: ${d.id}</p>
+                            <p class="text-xs">Licença: ${d.licenseId}</p>
+                            <p class="text-xs">Validade: ${new Date(d.validUntil.seconds * 1000).toLocaleDateString()}</p>
+                            <p class="text-xs">Último Sincronismo: ${d.lastSync ? new Date(d.lastSync.seconds * 1000).toLocaleString() : 'N/A'}</p>
+                            <div class="pt-2 border-t border-gray-700">
+                                <input type="url" value="${d.googleDriveFolderUrl || ''}" placeholder="Cole o link da pasta do Drive aqui" class="w-full text-xs p-1 bg-gray-700 rounded" onchange="updateDriveLink('${d.id}', this.value)">
+                            </div>
+                            <div class="flex space-x-2 mt-2">
+                                <button class="bg-red-600 text-white px-3 py-1 text-sm rounded" onclick="confirmDeleteDevice('${d.id}', '${d.licenseId}')">Excluir</button>
+                                <button class="bg-gray-600 text-white px-3 py-1 text-sm rounded" onclick="toggleBlockDevice('${d.id}', '${d.status}')">${d.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                content += `</div>`;
+            }
+            tabContents.monitoring.innerHTML = content;
+        }
+
+        window.updateDriveLink = async (deviceId, url) => {
+            try {
+                await updateDoc(doc(db, 'devices', deviceId), { googleDriveFolderUrl: url });
+                showNotification("Sucesso", "Link do Google Drive atualizado!");
+            } catch (e) {
+                showNotification("Erro", "Não foi possível atualizar o link.");
+            }
+        };
+        
+        window.confirmDeleteDevice = (deviceId, licenseId) => {
+            const confirmation = prompt("Para confirmar a exclusão, digite 'EXCLUIR' e clique em OK. Esta ação não pode ser desfeita.");
+            if (confirmation === 'EXCLUIR') {
+                deleteDevice(deviceId, licenseId);
+            } else {
+                showNotification("Cancelado", "A exclusão foi cancelada.");
+            }
+        };
+
+        async function deleteDevice(deviceId, licenseId) {
+            try {
+                // Deleta o dispositivo
+                await deleteDoc(doc(db, "devices", deviceId));
+
+                // Libera a licença
+                const licenseQuery = query(collection(db, "licenses"), where("licenseId", "==", licenseId));
+                const licenseSnapshot = await getDocs(licenseQuery);
+                if (!licenseSnapshot.empty) {
+                    const licenseDocRef = licenseSnapshot.docs[0].ref;
+                    await updateDoc(licenseDocRef, { status: 'available', deviceId: null });
+                }
+                showNotification("Sucesso", "Dispositivo excluído e licença liberada.");
+            } catch (error) {
+                console.error("Erro ao excluir dispositivo: ", error);
+                showNotification("Erro", `Falha ao excluir: ${error.message}`);
+            }
+        }
+        
+        window.toggleBlockDevice = async (deviceId, currentStatus) => {
+             const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+             try {
+                await updateDoc(doc(db, 'devices', deviceId), { status: newStatus });
+                showNotification("Sucesso", `Dispositivo ${newStatus === 'blocked' ? 'bloqueado' : 'desbloqueado'}.`);
+            } catch (e) {
+                showNotification("Erro", "Não foi possível alterar o status do dispositivo.");
+            }
+        }
+
+
+        // --- ABA DE ATIVAÇÃO ---
+        let html5QrCode;
+        function renderActivationTab() {
+            tabContents.activation.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4 text-lime-400">Ativar Dispositivo via QR Code</h2>
+                <div id="qr-reader" class="w-full max-w-md mx-auto"></div>
+                <div id="qr-result" class="mt-4 text-center"></div>
+            `;
+            html5QrCode = new Html5Qrcode("qr-reader");
+            startQrScanner();
+        }
+
+        function startQrScanner() {
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure).catch(err => {
+                document.getElementById('qr-reader').innerHTML = `<p class="text-red-500">Erro ao iniciar a câmera: ${err}. Certifique-se de dar permissão.</p>`;
+            });
+        }
+        
+        function stopQrScanner() {
+             if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().catch(err => console.error("Falha ao parar scanner", err));
+             }
+        }
+
+        async function onScanSuccess(decodedText, decodedResult) {
+            stopQrScanner();
+            document.getElementById('qr-result').innerText = `QR Code detectado! Processando...`;
+            try {
+                const data = JSON.parse(decodedText);
+                if (data.uid && data.ns) {
+                    // Verificar se o dispositivo já existe
+                    const deviceRef = doc(db, 'devices', data.uid);
+                    const deviceSnap = await getDoc(deviceRef);
+                    if (deviceSnap.exists()) {
+                        showNotification("Dispositivo já Ativado", `Este dispositivo (UID: ${data.uid}) já está registrado.`);
+                        startQrScanner(); // Reinicia o scanner
+                        return;
+                    }
+                    
+                    document.getElementById('device-uid').value = `UID: ${data.uid}`;
+                    document.getElementById('device-ns').value = `N/S: ${data.ns}`;
+                    
+                    // Carregar licenças disponíveis
+                    const licenseSelect = document.getElementById('license-select');
+                    licenseSelect.innerHTML = '<option value="">Carregando licenças...</option>';
+                    const q = query(collection(db, "licenses"), where("installerId", "==", currentInstaller.id), where("status", "==", "available"));
+                    const querySnapshot = await getDocs(q);
+                    licenseSelect.innerHTML = '<option value="">Selecione uma Licença</option>';
+                    if (querySnapshot.empty) {
+                        licenseSelect.innerHTML = '<option value="">Nenhuma licença disponível</option>';
+                    } else {
+                        querySnapshot.forEach((doc) => {
+                            licenseSelect.innerHTML += `<option value="${doc.data().licenseId}">${doc.data().licenseId}</option>`;
+                        });
+                    }
+                    
+                    activationModal.classList.remove('hidden');
+                } else {
+                    throw new Error("QR Code inválido.");
+                }
+            } catch (e) {
+                document.getElementById('qr-result').innerText = `Erro ao ler QR Code: ${e.message}`;
+                setTimeout(startQrScanner, 2000); // Tenta de novo
+            }
+        }
+
+        function onScanFailure(error) {
+            // Ignorar erros de "QR code not found"
+        }
+
+        document.getElementById('activation-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const deviceUID = document.getElementById('device-uid').value.replace('UID: ', '');
+            const licenseId = document.getElementById('license-select').value;
+            if(!licenseId) {
+                showNotification("Atenção", "Selecione uma licença válida.");
+                return;
+            }
+
+            const validityMonths = parseInt(document.getElementById('validity-select').value);
+            const activationDate = new Date();
+            const expiryDate = new Date(activationDate);
+            expiryDate.setMonth(expiryDate.getMonth() + validityMonths);
+
+            const newDeviceData = {
+                installerId: currentInstaller.id,
+                serialNumber: document.getElementById('device-ns').value.replace('N/S: ', ''),
+                clientName: document.getElementById('client-name').value,
+                clientPhone: document.getElementById('client-phone').value,
+                deviceName: document.getElementById('device-name').value,
+                licenseId: licenseId,
+                activatedOn: activationDate,
+                validUntil: expiryDate,
+                googleDriveFolderUrl: document.getElementById('drive-link').value,
+                status: 'active',
+                lastSync: null
+            };
+
+            try {
+                // Salva o novo dispositivo
+                await setDoc(doc(db, "devices", deviceUID), newDeviceData);
+
+                // Marca a licença como usada
+                const licenseQuery = query(collection(db, "licenses"), where("licenseId", "==", licenseId));
+                const licenseSnapshot = await getDocs(licenseQuery);
+                if (!licenseSnapshot.empty) {
+                    const licenseDocRef = licenseSnapshot.docs[0].ref;
+                    await updateDoc(licenseDocRef, { status: 'in_use', deviceId: deviceUID });
+                }
+
+                showNotification("Sucesso!", "Dispositivo ativado e configurado com sucesso.");
+                activationModal.classList.add('hidden');
+                document.getElementById('activation-form').reset();
+                startQrScanner();
+            } catch (error) {
+                console.error("Erro ao ativar dispositivo: ", error);
+                showNotification("Erro de Ativação", `Falha: ${error.message}`);
+            }
+        });
+
+        document.getElementById('cancel-activation').addEventListener('click', () => {
+            activationModal.classList.add('hidden');
+            document.getElementById('activation-form').reset();
+            startQrScanner();
+        });
+
+
+        // --- ABA HOSPEDAGEM DE ARTES (GOOGLE DRIVE) ---
+        function renderDriveTab() {
+            tabContents.drive.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4 text-lime-400">Gerenciador de Artes no Google Drive</h2>
+                    <div id="drive-auth-view">
+                        <p class="mb-4">Para gerenciar arquivos, você precisa conectar sua conta Google Drive.</p>
+                        <button id="drive-auth-button" class="bg-blue-600 text-white font-bold py-2 px-4 rounded">Conectar Google Drive</button>
+                    </div>
+                    <div id="drive-file-manager" class="hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <div id="drive-breadcrumbs" class="text-gray-400"></div>
+                            <button id="drive-disconnect-button" class="bg-red-600 text-white px-3 py-1 text-sm rounded">Desconectar</button>
+                        </div>
+                        <div class="flex space-x-2 mb-4">
+                            <input type="text" id="new-folder-name" placeholder="Nome da nova pasta" class="flex-grow p-2 bg-gray-700 rounded">
+                            <button id="create-folder-button" class="bg-lime-500 text-gray-900 font-bold px-4 py-2 rounded">Criar Pasta</button>
+                            <label class="bg-blue-500 text-white font-bold px-4 py-2 rounded cursor-pointer">
+                                <span>Enviar Arquivo</span>
+                                <input type="file" id="upload-file-input" class="hidden">
+                            </label>
+                        </div>
+                        <div id="drive-items-container" class="min-h-[200px] bg-gray-700 p-2 rounded"></div>
+                        <div id="file-upload-status" class="mt-2 text-sm"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('drive-auth-button').addEventListener('click', () => tokenClient.requestAccessToken({prompt: 'consent'}));
+            document.getElementById('drive-disconnect-button').addEventListener('click', () => gapi.client.oauth2.revoke(gapi.client.getToken().access_token, () => {
+                 gapi.client.setToken(null);
+                 document.getElementById('drive-auth-view').classList.remove('hidden');
+                 document.getElementById('drive-file-manager').classList.add('hidden');
+            }));
+            document.getElementById('create-folder-button').addEventListener('click', createFolder);
+            document.getElementById('upload-file-input').addEventListener('change', handleFileUpload);
+        }
+        
+        function initializeGapiClient() {
+            gapi.load('client', async () => {
+                await gapi.client.init({
+                    apiKey: GOOGLE_API_KEY,
+                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+                });
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: GOOGLE_SCOPES,
+                    callback: (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.access_token) {
+                            document.getElementById('drive-auth-view').classList.add('hidden');
+                            document.getElementById('drive-file-manager').classList.remove('hidden');
+                            listFiles();
+                        }
+                    },
+                });
+            });
+        }
+        
+        let currentDriveFolderId = 'root';
+        let breadcrumbs = [{id: 'root', name: 'Meu Drive'}];
+
+        async function listFiles(folderId = 'root') {
+             currentDriveFolderId = folderId;
+             document.getElementById('drive-items-container').innerHTML = `<p>Carregando...</p>`;
+             try {
+                const res = await gapi.client.drive.files.list({
+                    'pageSize': 50,
+                    'q': `'${folderId}' in parents and trashed = false`,
+                    'fields': "nextPageToken, files(id, name, mimeType, webViewLink)"
+                });
+                renderDriveItems(res.result.files);
+                updateBreadcrumbs();
+            } catch (e) {
+                console.error(e);
+                showNotification("Erro no Drive", `Não foi possível listar os arquivos. Tente reconectar.`);
+                gapi.client.setToken(null);
+                document.getElementById('drive-auth-view').classList.remove('hidden');
+                document.getElementById('drive-file-manager').classList.add('hidden');
+            }
+        }
+        
+        function renderDriveItems(files) {
+            const container = document.getElementById('drive-items-container');
+            container.innerHTML = '';
+            files.forEach(file => {
+                const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
+                const icon = isFolder ? '📁' : '📄';
+                const itemEl = document.createElement('div');
+                itemEl.className = 'drive-item flex justify-between items-center p-2 rounded cursor-pointer';
+                itemEl.innerHTML = `
+                    <div class="flex-grow">
+                        <span>${icon} ${file.name}</span>
+                    </div>
+                    <div class="space-x-2">
+                        <button class="text-xs text-red-400" onclick="event.stopPropagation(); deleteDriveFile('${file.id}', '${file.name}')">Excluir</button>
+                        <button class="text-xs text-blue-400" onclick="event.stopPropagation(); copyDriveLink('${file.webViewLink}')">Copiar Link</button>
+                    </div>
+                `;
+                if(isFolder) {
+                    itemEl.addEventListener('click', () => {
+                        breadcrumbs.push({id: file.id, name: file.name});
+                        listFiles(file.id);
+                    });
+                }
+                container.appendChild(itemEl);
+            });
+        }
+        
+        function updateBreadcrumbs() {
+            const container = document.getElementById('drive-breadcrumbs');
+            container.innerHTML = breadcrumbs.map((b, index) => 
+                `<span class="cursor-pointer hover:underline" data-id="${b.id}" data-index="${index}">${b.name}</span>`
+            ).join(' / ');
+            container.querySelectorAll('span').forEach(span => {
+                span.addEventListener('click', (e) => {
+                    const id = e.target.dataset.id;
+                    const index = parseInt(e.target.dataset.index);
+                    breadcrumbs = breadcrumbs.slice(0, index + 1);
+                    listFiles(id);
                 });
             });
         }
 
-        function createDeviceCard(id, device) {
-            const card = document.createElement('div');
-            card.className = 'bg-gray-800 p-4 rounded-lg shadow-md';
+        async function createFolder() {
+            const folderName = document.getElementById('new-folder-name').value;
+            if (!folderName) return;
+            try {
+                await gapi.client.drive.files.create({
+                    resource: {
+                        'name': folderName,
+                        'mimeType': 'application/vnd.google-apps.folder',
+                        'parents': [currentDriveFolderId]
+                    }
+                });
+                document.getElementById('new-folder-name').value = '';
+                listFiles(currentDriveFolderId);
+            } catch (e) { showNotification("Erro", "Falha ao criar pasta."); }
+        }
 
-            const validadeDate = new Date(device.validade.seconds * 1000);
-            const statusClass = device.status === 'ativo' ? 'text-green-400' : 'text-yellow-400';
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-            card.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h3 class="font-bold text-lg">${device.nomeDispositivo} <span class="text-sm font-normal text-gray-400">(${device.nomeCliente})</span></h3>
-                        <p class="text-sm text-gray-500">${device.telefone}</p>
-                    </div>
-                    <span class="text-sm font-semibold ${statusClass}">${device.status.toUpperCase()}</span>
-                </div>
-                <div class="text-xs text-gray-400 mt-3 space-y-1">
-                    <p><strong>Licença:</strong> ${device.licenca}</p>
-                    <p><strong>Validade:</strong> ${validadeDate.toLocaleDateString('pt-BR')}</p>
-                    <p><strong>Link Drive:</strong> <a href="${device.linkDrive}" target="_blank" class="text-blue-400 hover:underline">Abrir</a></p>
-                    <p class="font-mono text-gray-500">UID: ${device.uid}</p>
-                </div>
-                <div class="mt-3 flex justify-end space-x-2">
-                     <button data-id="${id}" class="block-button text-xs bg-yellow-600 hover:bg-yellow-500 px-3 py-1 rounded">Bloquear</button>
-                     <button data-id="${id}" class="delete-button text-xs bg-red-600 hover:bg-red-500 px-3 py-1 rounded">Excluir</button>
-                </div>
-            `;
+            const metadata = {
+                'name': file.name,
+                'parents': [currentDriveFolderId]
+            };
             
-            card.querySelector('.delete-button').addEventListener('click', async () => {
-                const confirmDelete = confirm(`Tem certeza que deseja excluir o dispositivo ${device.nomeDispositivo}? A licença retornará a estar disponível.`);
-                if(confirmDelete){
-                    await deleteDoc(doc(db, 'installers', currentUser.uid, 'devices', id));
-                    // TODO: Incrementar a contagem de licenças disponíveis
-                }
+            const uploader = new gapi.client.drive.files.create({
+                resource: metadata,
+                media: {
+                    body: file
+                },
+                fields: 'id'
             });
 
-            return card;
-        }
+            const statusEl = document.getElementById('file-upload-status');
+            statusEl.textContent = `Enviando ${file.name}...`;
 
-        // Lógica de Ativação (Modal e Scanner)
-        const scanButton = document.getElementById('scan-qr-button');
-        const activationModal = document.getElementById('activation-modal');
-        const cancelActivationButton = document.getElementById('cancel-activation-button');
-        const saveActivationButton = document.getElementById('save-activation-button');
-        const activationForm = document.getElementById('activation-form');
-        let html5QrCode;
-
-        scanButton.addEventListener('click', () => {
-            const qrScannerContainer = document.createElement('div');
-            qrScannerContainer.id = 'qr-reader';
-            qrScannerContainer.style.width = '100%';
-            document.body.appendChild(qrScannerContainer);
-            
-            html5QrCode = new Html5Qrcode("qr-reader");
-            
-            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-                console.log(`Scan result: ${decodedText}`, decodedResult);
-                html5QrCode.stop().then(() => {
-                    qrScannerContainer.remove();
-                    processQrCode(decodedText);
-                }).catch(err => console.error("Failed to stop scanner", err));
-            };
-
-            const config = { fps: 10, qrbox: 250 };
-            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback);
-        });
-        
-        function processQrCode(data) {
-            try {
-                const uidMatch = data.match(/uid:([^,]+)/);
-                const nsMatch = data.match(/ns:([^,]+)/);
-                
-                if(!uidMatch || !nsMatch){
-                    alert("QR Code inválido. Formato esperado: 'uid:XXXX,ns:YYYY'");
-                    return;
+            uploader.execute((resp) => {
+                if (resp.error) {
+                    statusEl.textContent = `Erro no envio: ${resp.error.message}`;
+                } else {
+                    statusEl.textContent = `${file.name} enviado com sucesso!`;
+                    listFiles(currentDriveFolderId);
+                    setTimeout(() => statusEl.textContent = '', 3000);
                 }
-                
-                document.getElementById('uid-input').value = uidMatch[1];
-                document.getElementById('ns-input').value = nsMatch[1];
-                // TODO: Pegar uma licença real da lista de disponíveis
-                document.getElementById('licenca-input').value = `LICENCA-${new Date().getTime()}`;
-                
-                activationModal.classList.remove('hidden');
+            });
+        }
+        
+        window.copyDriveLink = async (link) => {
+            try {
+                await navigator.clipboard.writeText(link);
+                showNotification("Sucesso", "Link copiado para a área de transferência!");
+            } catch (err) {
+                showNotification("Erro", "Não foi possível copiar o link.");
+            }
+        };
 
+        window.deleteDriveFile = async (fileId, fileName) => {
+             if (!confirm(`Tem certeza que deseja excluir '${fileName}'?`)) return;
+             try {
+                await gapi.client.drive.files.delete({ fileId: fileId });
+                listFiles(currentDriveFolderId);
+             } catch(e) { showNotification("Erro", "Falha ao excluir o arquivo."); }
+        };
+
+        // --- ABAS DE MANUTENÇÃO E AVISO ---
+        function renderMaintenanceTab(devices = []) {
+             let content = `<h2 class="text-2xl font-bold mb-4 text-lime-400">Manutenção Remota</h2>`;
+             if (devices.length === 0) {
+                content += `<p>Nenhum dispositivo para gerenciar.</p>`;
+             } else {
+                content += `<div class="space-y-2">`;
+                devices.forEach(d => {
+                    content += `
+                        <div class="bg-gray-800 p-3 rounded-lg flex justify-between items-center">
+                            <span>${d.deviceName} (${d.clientName})</span>
+                            <button class="bg-orange-500 text-white font-bold px-4 py-2 rounded" onclick="requestReboot('${d.id}')">Reiniciar Dispositivo</button>
+                        </div>
+                    `;
+                });
+                content += `</div>`;
+             }
+             tabContents.maintenance.innerHTML = content;
+        }
+
+        window.requestReboot = async (deviceId) => {
+            if (!confirm("Tem certeza que deseja reiniciar este dispositivo?")) return;
+            try {
+                await updateDoc(doc(db, 'devices', deviceId), { rebootRequested: new Date() });
+                showNotification("Sucesso", "Comando de reinicialização enviado.");
+            } catch (e) {
+                showNotification("Erro", "Falha ao enviar comando.");
+            }
+        };
+
+        function renderAdvisoryTab(devices = []) {
+            let content = `<h2 class="text-2xl font-bold mb-4 text-lime-400">Aviso de Inadimplência</h2>`;
+            if (devices.length === 0) {
+                content += `<p>Nenhum dispositivo para gerenciar.</p>`;
+            } else {
+                content += `<div class="space-y-4">`;
+                devices.forEach(d => {
+                    const message = d.advisoryMessage || `Pagamento pendente. Contato: ${currentInstaller.phone}`;
+                    content += `
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                           <h3 class="font-bold">${d.deviceName} (${d.clientName})</h3>
+                           <textarea class="w-full bg-gray-700 p-2 rounded mt-2 text-sm" rows="2" id="msg-${d.id}">${message}</textarea>
+                           <div class="flex space-x-2 mt-2">
+                               <button class="w-full ${d.showAdvisory ? 'bg-gray-500' : 'bg-green-600'} text-white font-bold py-2 rounded" onclick="toggleAdvisory('${d.id}', false, '${d.id}')">Desativar Aviso</button>
+                               <button class="w-full bg-red-600 text-white font-bold py-2 rounded" onclick="toggleAdvisory('${d.id}', true, '${d.id}')">Ativar Aviso</button>
+                           </div>
+                        </div>
+                    `;
+                });
+                content += `</div>`;
+            }
+            tabContents.advisory.innerHTML = content;
+        }
+        
+        window.toggleAdvisory = async (deviceId, show, elementId) => {
+            const message = document.getElementById(`msg-${elementId}`).value;
+            try {
+                 await updateDoc(doc(db, 'devices', deviceId), { showAdvisory: show, advisoryMessage: message });
+                 showNotification("Sucesso", `Aviso ${show ? 'ativado' : 'desativado'}.`);
             } catch(e) {
-                alert('Erro ao processar QR Code.');
-                console.error(e);
+                showNotification("Erro", "Não foi possível atualizar o aviso.");
             }
         }
         
-        cancelActivationButton.addEventListener('click', () => {
-             activationModal.classList.add('hidden');
-             activationForm.reset();
-        });
-
-        activationForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const validadeMeses = parseInt(document.getElementById('validade-input').value);
-            const dataValidade = new Date();
-            dataValidade.setMonth(dataValidade.getMonth() + validadeMeses);
-
-            const newDevice = {
-                uid: document.getElementById('uid-input').value,
-                ns: document.getElementById('ns-input').value,
-                licenca: document.getElementById('licenca-input').value,
-                nomeCliente: document.getElementById('cliente-input').value,
-                telefone: document.getElementById('telefone-input').value,
-                nomeDispositivo: document.getElementById('dispositivo-input').value,
-                linkDrive: document.getElementById('drive-link-input').value,
-                validade: dataValidade,
-                status: 'ativo', // 'ativo', 'inadimplente', 'bloqueado'
-                ultimoSincronismo: new Date(),
-            };
-            
-            try {
-                const devicesRef = collection(db, 'installers', currentUser.uid, 'devices');
-                await addDoc(devicesRef, newDevice);
-                // TODO: Decrementar a contagem de licenças disponíveis
-                alert('Dispositivo ativado com sucesso!');
-                cancelActivationButton.click(); // Fecha e reseta o modal
-            } catch (error) {
-                console.error("Erro ao salvar dispositivo:", error);
-                alert('Falha ao salvar. Tente novamente.');
-            }
-        });
+        // --- UTILITÁRIOS ---
+        const modal = document.getElementById('notification-modal');
+        function showNotification(title, message) {
+            modal.querySelector('#notification-title').textContent = title;
+            modal.querySelector('#notification-message').textContent = message;
+            modal.classList.remove('hidden');
+        }
+        document.getElementById('notification-close').addEventListener('click', () => modal.classList.add('hidden'));
 
     </script>
 </body>
 </html>
-
